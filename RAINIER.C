@@ -73,6 +73,21 @@ char cbriccs[] = "BrIccS.exe"; // haven't done any windows testing yet
 #include "settings.h" // all (or most) parameters for the simulations
 string g_sRAINIERPath; // Path to RAINIER
 
+#ifdef bPrintCascade
+#include <fstream>
+#include <vector>
+ofstream g_afileCascade[g_nReal][g_nExIMean];
+void InitCascade() {
+  for(int real=0; real<g_nReal; real++) {
+    for(int exim=0; exim<g_nExIMean; exim++) {
+      char acBuffer[50];
+      sprintf(acBuffer,"casR%dEx%d.txt",real,exim);
+      g_afileCascade[real][exim].open(acBuffer);
+    } // exim
+  } // real
+}
+#endif
+
 ///////////////////////// Discrete Input File //////////////////////////////////
 double g_adDisEne[g_nDisLvlMax]; // discrete lvl energy
 double g_adDisSp [g_nDisLvlMax]; // discrete lvl spin
@@ -1681,6 +1696,9 @@ void RAINIER(int g_nRunNum = 1) {
   #ifdef bUseICC
   InitICC();
   #endif
+  #ifdef bPrintCascade
+  InitCascade();
+  #endif
 
   for(int exim=0; exim<g_nExIMean; exim++) {
     g_grTotWidAvg[exim] = new TGraph(g_nReal); // bench
@@ -1834,6 +1852,10 @@ void RAINIER(int g_nRunNum = 1) {
             cout << "    " << ev << " / " << g_nEvent << "\r" << flush;
           #endif
           TRandom2 ranEv(1 + real + ev * g_nReal);
+		
+	  #ifdef bPrintCascade
+          vector<double> vd_gam;
+          #endif
 
           /////// initial state formation ///////
           int nExI,nSpbI,nParI,nDisEx,nLvlInBinI; // Initial state variables
@@ -1956,6 +1978,9 @@ void RAINIER(int g_nRunNum = 1) {
               if(dProbEle > dRanICC) bIsElectron = true;
 
               if( !bIsElectron ) { // emitted gamma
+		#ifdef bPrintCascade
+                vd_gam.push_back(dEg);
+                #endif
                 double dExRes = g_dExRes; // ~ particle resolution
                 double dExDet = dExI + ranEv.Gaus(0.0, dExRes);
                 g_ahGSpec[real][exim]->Fill(dEg);
@@ -1996,6 +2021,13 @@ void RAINIER(int g_nRunNum = 1) {
             } // IsAlive
 
           } // no longer excited
+          #ifdef bPrintCascade
+          g_afileCascade[real][exim] << int(vd_gam.size()) << " ";
+          for(int gam=0; gam<int(vd_gam.size()); gam++) {
+            g_afileCascade[real][exim] << vd_gam[gam] << " ";
+          }
+          g_afileCascade[real][exim] << endl;
+          #endif
         } //////////////////////////////////////////////////////////////////////
         ////////////////////////// EVENTS //////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////
