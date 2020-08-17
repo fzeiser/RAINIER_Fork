@@ -1314,7 +1314,7 @@ std::tuple<int, int> GetLevelIfExists(double dExI, int &nExI, int &nSpbI,
         nLvlInBinI = 0;
       } // discrete
       else { // is continuum level
-        nExI = round( (dExI - g_dECrit) / g_dConESpac );
+        nExI = round( (dExI - g_dECrit - 0.001) / g_dConESpac );
         nDisEx = g_nDisLvlMax; // dummy
         // For now: assuming selection rules dJ = dPi = 0!
         int nLvlAvail = g_anConLvl[EJP(GetContExBin(dExI),nSpbI,nParI)];
@@ -1351,11 +1351,9 @@ void GetExI(int &nExI, int &nSpbI, int &nParI, int &nDisEx, int &nLvlInBinI,
   nSpbI = int(g_dSpI);
   nParI = g_dParI;
   double dExI = g_adConExCen[nExI];
-  // int nExI_tmp = nExI;
   std::tie(nLvlInBinI, nDisEx) = GetLevelIfExists(dExI, nExI, nSpbI,
                                                   nParI, nDisEx,
                                                   nLvlInBinI, ranEv);
-  // nExI = nExI_tmp;
   #endif
 
   ///// Beta-decay like selection of states /////
